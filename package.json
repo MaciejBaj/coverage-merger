@@ -1,0 +1,33 @@
+{
+  "name": "coverage-merger",
+  "version": "1.0.0",
+  "description": "merge chunked coverages into one report",
+  "main": "watch_coverages.sh",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MaciejBaj/coverage-merger.git"
+  },
+  "keywords": [
+    "coverage",
+    "istanbul",
+    "istanbul-merge",
+    "test",
+    "merge"
+  ],
+  "author": "Maciej Baj",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/MaciejBaj/coverage-merger/issues"
+  },
+  "homepage": "https://github.com/MaciejBaj/coverage-merger#readme",
+  "dependencies": {
+    "coveralls": "=2.11.15",
+    "istanbul": "^0.4.5",
+    "istanbul-combine": "^0.3.0",
+    "istanbul-merge": "=1.1.1",
+    "remap-istanbul": "^0.8.4"
+  }
+}

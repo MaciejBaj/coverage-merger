@@ -40,7 +40,4 @@ jspm_packages
 .idea
 
 # additional
-logs
-!logs/.empty
-coverages
-!coverages/.empty
+merged-coverage
