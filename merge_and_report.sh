@@ -1,6 +1,7 @@
 #!/bin/bash
 
-source global.conf
+PROJECT_CONF=$1
+source ${PROJECT_CONF}
 source report_params.sh
 
 if [ -z ${REPO_NAME+x} ] || [ -z ${REPO_URL+x} ] || [ -z ${REPORT_CREATION_DIR+x} ]; then
@@ -11,13 +12,16 @@ fi
 CHUNK_FILTER="BRANCH-.*-BUILD-[0-9]*-JOB-[0-9]*-OF-[0-9]*.zip"
 
 function clean_previous {
-    rm coverage.json
+    OUT_REPORT_PATH=$1
+    rm -rf ${OUT_REPORT_PATH}
     find chunks -type f -name ${CHUNK_FILTER%.*} -delete;
 }
 
 function merge {
     OUT_REPORT_PATH=$1
-    MERGE_CMD="$(pwd)/node_modules/.bin/istanbul-combine -d $OUT_REPORT_PATH -r lcov -r html "
+    MERGER_DIR=$2
+    REPORT_CREATION_DIR=$3
+    MERGE_CMD="${MERGER_DIR}/node_modules/.bin/istanbul-combine -d $OUT_REPORT_PATH -r lcov -r html "
     for CHUNK in $(find chunks -type d -name ${CHUNK_FILTER%.*}); do
         if [ ! -e ${CHUNK}/coverage.json ]; then
             echo "[LOG][$(date -u "+%Y-%m-%d %H:%M:%S") UTC] No report found at path ${CHUNK}/coverage.json. Skipping."  | \
@@ -57,7 +61,7 @@ function prepare_repo {
 
 function report {
     LCOV_REPORT_PATH=$1
-    cat ${LCOV_REPORT_PATH} | node_modules/.bin/coveralls
+    cat ${LCOV_REPORT_PATH} | ${MERGER_DIR}/node_modules/.bin/coveralls
     if [ $? == 0 ]; then
         echo "[LOG][$(date -u "+%Y-%m-%d %H:%M:%S") UTC] Successfully sent report to coveralls!" | \
             tee -a logs/.merge_and_report.log;
@@ -68,21 +72,23 @@ function report {
     fi
 }
 
-clean_previous
+MERGER_DIR=$(pwd)
+OUT_REPORT_PATH=$(pwd)/merged-coverage
+cd ${REPO_NAME}
+clean_previous ${OUT_REPORT_PATH}
 
 echo "[LOG][$(date -u "+%Y-%m-%d %H:%M:%S") UTC] Merging all chunks into one report..." | \
     tee -a logs/.merge_and_report.log;
 
 find chunks -type f -name ${CHUNK_FILTER} | while read CHUNK_ZIP; do
-    echo $CHUNK_ZIP
     unzip ${CHUNK_ZIP} -d ${CHUNK_ZIP%.*} &&
     rm ${CHUNK_ZIP} &&
     echo "[LOG][$(date -u "+%Y-%m-%d %H:%M:%S") UTC] Chunk ${CHUNK_ZIP} unpacked" | \
         tee -a logs/.merge_and_report.log;
 done
 
-OUT_REPORT_PATH=$(pwd)/merged-coverage
 BRANCH=eval get_branch `get_first_coverage`
 prepare_repo ${REPO_NAME} get_branch
-merge ${OUT_REPORT_PATH}
-report ${OUT_REPORT_PATH}/lcov.info
+merge ${OUT_REPORT_PATH} ${MERGER_DIR} ${REPORT_CREATION_DIR}
+report ${OUT_REPORT_PATH}/lcov.info ${MERGER_DIR}
+cd ..

@@ -11,14 +11,19 @@ function reports_count {
 }
 
 function get_latest_build {
-   LATEST_BUILD=0
-   REPORTS=`find_reports`
-   for REPORT in "${REPORTS[@]}"; do
-    BUILD=`get_build ${REPORT}`
-    if (( BUILD > LATEST_BUILD )); then
-      LATEST_BUILD=${BUILD}
+    LATEST_BUILD=0
+    REPORTS=`find_reports`
+    if [ -n "${REPORTS}" ]; then
+        for REPORT in "${REPORTS[@]}"; do
+            echo ${REPORT}
+            if [ -n ${REPORT} ] || [ ${REPORT} != "" ]; then
+                BUILD=`get_build ${REPORT}`
+                if (( BUILD > LATEST_BUILD )); then
+                  LATEST_BUILD=${BUILD}
+                fi
+            fi
+        done
     fi
-    done
     echo "$LATEST_BUILD"
 }
 
