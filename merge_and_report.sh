@@ -9,7 +9,7 @@ if [ -z ${REPO_NAME+x} ] || [ -z ${REPO_URL+x} ] || [ -z ${REPORT_CREATION_DIR+x
     exit 1;
 fi
 
-CHUNK_FILTER="BRANCH-.*-BUILD-[0-9]*-JOB-[0-9]*-OF-[0-9]*.zip"
+CHUNK_FILTER="BRANCH-*-BUILD-[0-9]*-JOB-[0-9]*-OF-[0-9]*.zip"
 
 function clean_previous {
     OUT_REPORT_PATH=$1
@@ -23,6 +23,7 @@ function merge {
     REPORT_CREATION_DIR=$3
     MERGE_CMD="${MERGER_DIR}/node_modules/.bin/istanbul-combine -d $OUT_REPORT_PATH -r lcov -r html "
     for CHUNK in $(find chunks -type d -name ${CHUNK_FILTER%.*}); do
+        echo $CHUNK
         if [ ! -e ${CHUNK}/coverage.json ]; then
             echo "[LOG][$(date -u "+%Y-%m-%d %H:%M:%S") UTC] No report found at path ${CHUNK}/coverage.json. Skipping."  | \
                 tee -a logs/.merge_and_report.log;
@@ -53,6 +54,7 @@ function prepare_repo {
     cd ${REPO_NAME}
     git fetch
     git checkout ${BRANCH}
+    git pull
     cd ..
 
     echo "[LOG][$(date -u "+%Y-%m-%d %H:%M:%S") UTC] $REPO_NAME updated and switched on branch $BRANCH" | \
@@ -88,7 +90,7 @@ find chunks -type f -name ${CHUNK_FILTER} | while read CHUNK_ZIP; do
 done
 
 BRANCH=eval get_branch `get_first_coverage`
-prepare_repo ${REPO_NAME} get_branch
+prepare_repo ${REPO_NAME} `get_branch`
 merge ${OUT_REPORT_PATH} ${MERGER_DIR} ${REPORT_CREATION_DIR}
 report ${OUT_REPORT_PATH}/lcov.info ${MERGER_DIR}
 cd ..
