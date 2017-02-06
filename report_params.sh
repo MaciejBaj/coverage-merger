@@ -18,7 +18,7 @@ function get_latest_build {
     LATEST_BUILD=0
     REPORTS=`find_reports`
     if [ -n "${REPORTS}" ]; then
-        for REPORT in "${REPORTS[@]}"; do
+        for REPORT in ${REPORTS[@]}; do
             if [ -n "${REPORT}" ] || [ ${REPORT} != "" ]; then
                 BUILD=`get_build ${REPORT}`
                 if (( BUILD > LATEST_BUILD )); then
