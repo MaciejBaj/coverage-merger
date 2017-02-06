@@ -3,9 +3,9 @@ store and send merged test coverage to coveralls
 
 Allows to merge reports for multiple projects.
 
-##System dependencies: `nodejs unzip inotify-tools`
-##Installation: `npm install` or `yarn`
-##Usage:
+###System dependencies: `nodejs unzip inotify-tools`
+###Installation: `npm install` or `yarn`
+###Usage:
 Provide proper `.conf` file, similar to `lisk.conf`.
 - REPO_URL: url to repository (used for git clone)
 - REPO_NAME: url repository name
