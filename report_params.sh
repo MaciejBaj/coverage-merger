@@ -10,13 +10,16 @@ function reports_count {
     echo `find coverages -type f -name ${BUILD_FILTER} | wc -l`
 }
 
+function find_chunks {
+    echo $(find chunks -type d -name ${BUILD_FILTER%.*})
+}
+
 function get_latest_build {
     LATEST_BUILD=0
     REPORTS=`find_reports`
     if [ -n "${REPORTS}" ]; then
         for REPORT in "${REPORTS[@]}"; do
-            echo ${REPORT}
-            if [ -n ${REPORT} ] || [ ${REPORT} != "" ]; then
+            if [ -n "${REPORT}" ] || [ ${REPORT} != "" ]; then
                 BUILD=`get_build ${REPORT}`
                 if (( BUILD > LATEST_BUILD )); then
                   LATEST_BUILD=${BUILD}

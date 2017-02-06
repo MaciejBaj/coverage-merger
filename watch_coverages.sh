@@ -7,7 +7,6 @@ source ${PROJECT_CONF}
 source report_params.sh
 
 function remove_old_reports {
-    pwd
     LATEST_BUILD=$1
     LATEST_BUILD_FILTER="BRANCH-*-BUILD-$LATEST_BUILD-JOB-[0-9]*-OF-[0-9]*.zip"
     find coverages -type f -not -name ${LATEST_BUILD_FILTER} | while read OLD_REPORT; do
@@ -64,13 +63,18 @@ inotifywait -m ${REPO_NAME}/coverages -e create -e moved_to |
             tee -a logs/.watch_coverages.log
         if [[ ! ${file} =~ BRANCH-.*-BUILD-[0-9]*-JOB-[0-9]*-OF-[0-9]*.zip ]]; then
             rm coverages/${file}
-        elif (( `reports_count` == `get_declared_test_number ${LATEST_BUILD}` )); then
-            rm -rf chunks/*
-            mv coverages/* chunks
-            echo "[LOG][$(date -u "+%Y-%m-%d %H:%M:%S") UTC] All chunks collected! Starting merging script.." | \
-                    tee -a logs/.watch_coverages.log
-            cd ${MERGER_DIR}
-            bash merge_and_report.sh ${PROJECT_CONF} ${LATEST_BUILD}
+        else
+            LATEST_BUILD=`get_latest_build`
+            remove_old_reports ${LATEST_BUILD}
+            REPORTS_COUNT=`reports_count`
+            if [ ${REPORTS_COUNT} -gt 0 ] && (( ${REPORTS_COUNT} == `get_declared_test_number ${LATEST_BUILD}` )); then
+                rm -rf chunks/*
+                mv coverages/* chunks
+                echo "[LOG][$(date -u "+%Y-%m-%d %H:%M:%S") UTC] All chunks collected! Starting merging script.." | \
+                        tee -a logs/.watch_coverages.log
+                cd ${MERGER_DIR}
+                bash merge_and_report.sh ${PROJECT_CONF} ${LATEST_BUILD}
+            fi
         fi
         cd ${MERGER_DIR}
     done
