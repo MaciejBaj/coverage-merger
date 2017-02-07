@@ -33,9 +33,8 @@ function merge {
     done
 
     rm -rf ${OUT_REPORT_PATH}
-    cd ${REPO_NAME}
+    cp -vR ${REPO_NAME}/* .
     eval ${MERGE_CMD}
-    cd ..
 
     if [ ! -e ${OUT_REPORT_PATH} ]; then
       echo "[LOG][$(date -u "+%Y-%m-%d %H:%M:%S") UTC] Unable to merge chunked reports into ${OUT_REPORT_PATH} Failed on command: ${MERGE_CMD}"  | \
@@ -62,8 +61,17 @@ function prepare_repo {
 
 function report {
     LCOV_REPORT_PATH=$1
+    REPO_TOKEN=$2
+    MERGER_DIR=$3
+    BRANCH=$4
+    BUILD=$5
     touch .coveralls.yml
-    echo "repo_token: ${REPO_TOKEN}" > .coveralls.yml
+    echo "repo_token: $REPO_TOKEN" > .coveralls.yml
+    echo "service_number: $BUILD" | tee -a  .coveralls.yml
+    echo "git: { \"branch\": \"${BRANCH}\" }" | tee -a .coveralls.yml
+    cd ${REPO_NAME}
+    echo "commit_sha:" `git rev-parse HEAD` | tee -a  ../.coveralls.yml
+    cd ..
     cat ${LCOV_REPORT_PATH} | ${MERGER_DIR}/node_modules/.bin/coveralls
     if [ $? == 0 ]; then
         echo "[LOG][$(date -u "+%Y-%m-%d %H:%M:%S") UTC] Successfully sent report to coveralls!" | \
@@ -99,7 +107,8 @@ if [ -z "$(find chunks -type d -name ${CHUNK_FILTER%.*})" ]; then
 fi
 
 BRANCH=eval get_branch `get_first_coverage`
+BUILD=eval get_build `get_first_coverage`
 prepare_repo ${REPO_NAME} `get_branch`
 merge ${OUT_REPORT_PATH} ${MERGER_DIR} ${REPORT_CREATION_DIR}
-report ${OUT_REPORT_PATH}/lcov.info ${MERGER_DIR}
+report ${OUT_REPORT_PATH}/lcov.info ${REPO_TOKEN} ${MERGER_DIR} ${BRANCH} ${BUILD}
 cd ..
